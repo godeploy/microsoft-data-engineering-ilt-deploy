@@ -1,9 +1,11 @@
+param($resourceGroupName)
+
 $InformationPreference = "Continue"
 
 if(Get-Module -Name solliance-synapse-automation){
-    Remove-Module solliance-synapse-automation
+    Remove-Module solliance-synapse-automation -Force
 }
-Import-Module "..\solliance-synapse-automation"
+Import-Module "..\solliance-synapse-automation" -Force
 
 #Different approach to run automation in Cloud Shell
 $subs = Get-AzSubscription | Select-Object -ExpandProperty Name
@@ -19,7 +21,9 @@ if($subs.GetType().IsArray -and $subs.length -gt 1){
     Select-AzSubscription -SubscriptionName $selectedSubName
 }
 
-$resourceGroupName = Read-Host "Enter the resource group name";
+if ($null -eq $resourceGroupName) {
+        $resourceGroupName = Read-Host "Enter the resource group name";
+}
 
 $userName = ((az ad signed-in-user show) | ConvertFrom-JSON).UserPrincipalName
 

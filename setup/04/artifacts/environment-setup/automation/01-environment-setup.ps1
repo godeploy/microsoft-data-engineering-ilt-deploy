@@ -1,3 +1,5 @@
+param($resourceGroupName)
+
 $InformationPreference = "Continue"
 
 $IsCloudLabs = Test-Path C:\LabFiles\AzureCreds.ps1;
@@ -64,7 +66,9 @@ if($IsCloudLabs){
                 az account set --subscription $selectedSubName
         }
 
-        $resourceGroupName = Read-Host "Enter the resource group name";
+        if ($null -eq $resourceGroupName) {
+                $resourceGroupName = Read-Host "Enter the resource group name";
+        }
         
         $userName = ((az ad signed-in-user show) | ConvertFrom-JSON).UserPrincipalName
         
@@ -622,7 +626,7 @@ $documentCount = Count-CosmosDbDocuments -SubscriptionId $subscriptionId -Resour
 
 Write-Information "Found $documentCount in Cosmos DB container $($cosmosDbContainer)"
 
-Install-Module -Name Az.CosmosDB
+Install-Module -Name Az.CosmosDB -Force
 
 if ($documentCount -ne 100000) 
 {

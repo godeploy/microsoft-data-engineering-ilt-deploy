@@ -193,20 +193,8 @@ Ensure-ValidTokens $true
 
 if ([System.Environment]::OSVersion.Platform -eq "Unix")
 {
-        $azCopyLink = Check-HttpRedirect "https://aka.ms/downloadazcopy-v10-linux"
-
-        if (!$azCopyLink)
-        {
-                $azCopyLink = "https://azcopyvnext.azureedge.net/release20200709/azcopy_linux_amd64_10.5.0.tar.gz"
-        }
-
-        Invoke-WebRequest $azCopyLink -OutFile "azCopy.tar.gz"
-        tar -xf "azCopy.tar.gz"
-        $azCopyCommand = (Get-ChildItem -Path ".\" -Recurse azcopy).Directory.FullName
-        cd $azCopyCommand
-        chmod +x azcopy
-        cd ..
-        $azCopyCommand += "\azcopy"
+        bash -c 'curl -L https://aka.ms/downloadazcopy-v10-linux -o azcopyv10.tar && tar -xf azcopyv10.tar --strip-components=1 && mv azcopy /usr/local/bin/azcopy && rm azcopyv10.tar'
+        $azCopyCommand = "azcopy"
 }
 else
 {

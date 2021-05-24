@@ -1,4 +1,6 @@
-param($resourceGroupName)
+param($gdResourceGroupName)
+
+Write-Host $gdResourceGroupName
 
 $InformationPreference = "Continue"
 
@@ -66,8 +68,10 @@ if($IsCloudLabs){
                 az account set --subscription $selectedSubName
         }
 
-        if ($null -eq $resourceGroupName) {
+        if ($null -eq $gdResourceGroupName) {
                 $resourceGroupName = Read-Host "Enter the resource group name";
+        } else {
+                $resourceGroupName = $gdResourceGroupName
         }
         
         $userName = ((az ad signed-in-user show) | ConvertFrom-JSON).UserPrincipalName

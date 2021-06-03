@@ -96,7 +96,7 @@ Write-Host "Service Principal Name: 'Azure Synapse Analytics GA Labs $($uniqueId
 $app = ((az ad sp list --display-name "Azure Synapse Analytics GA Labs $($uniqueId)") | ConvertFrom-Json)[0]
 $kustoStatement = ".add database ['$($kustoDatabaseName)'] admins ('aadapp=$($app.appId)')"
 Write-Host "Kusto Statement: $kustoStatement"
-$body = "{ db: ""$kustoDatabaseName"", csl: ""$kustoStatement"" }"
+$body = "{ ""db"": ""$kustoDatabaseName"", ""csl"": ""$kustoStatement"" }"
 Write-Host "Body: $body"
 $addKustoServicePrincipalUri = "https://$kustoClusterName.$($location).kusto.windows.net/v1/rest/mgmt"
 Write-Host "URI: $addKustoServicePrincipalUri"

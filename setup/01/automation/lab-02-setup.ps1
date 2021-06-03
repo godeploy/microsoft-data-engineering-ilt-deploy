@@ -97,7 +97,7 @@ $app = ((az ad sp list --display-name "Azure Synapse Analytics GA Labs $($unique
 $kustoStatement = ".add database ['$($kustoDatabaseName)'] admins ('aadapp=$($app.appId)')"
 Write-Host "Kusto Statement: $kustoStatement"
 $body = "{ db: ""$kustoDatabaseName"", csl: ""$kustoStatement"" }"
-Write-Host "Body: $kustoStatement"
+Write-Host "Body: $body"
 $addKustoServicePrincipalUri = "https://$kustoClusterName.$($location).kusto.windows.net/v1/rest/mgmt"
 Write-Host "URI: $addKustoServicePrincipalUri"
 

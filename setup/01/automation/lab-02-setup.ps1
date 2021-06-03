@@ -92,11 +92,16 @@ Invoke-RestMethod -Uri https://$kustoClusterName.$($location).kusto.windows.net/
 # Set the Azure Synapse Analytics GA Labs service principal as admin on the Kusto database
 
 Write-Information "Making the service principal 'Azure Synapse Analytics GA Labs $($uniqueId)' an admin on the Kusto database"
+Write-Host "Service Principal Name: 'Azure Synapse Analytics GA Labs $($uniqueId)'"
 $app = ((az ad sp list --display-name "Azure Synapse Analytics GA Labs $($uniqueId)") | ConvertFrom-Json)[0]
 $kustoStatement = ".add database ['$($kustoDatabaseName)'] admins ('aadapp=$($app.appId)')"
+Write-Host "Kusto Statement: $kustoStatement"
 $body = "{ db: ""$kustoDatabaseName"", csl: ""$kustoStatement"" }"
-Invoke-RestMethod -Uri https://$kustoClusterName.$($location).kusto.windows.net/v1/rest/mgmt -Method POST -Body $body -Headers @{ Authorization="Bearer $token" } -ContentType "application/json"
+Write-Host "Body: $kustoStatement"
+$addKustoServicePrincipalUri = "https://$kustoClusterName.$($location).kusto.windows.net/v1/rest/mgmt"
+Write-Host "URI: $addKustoServicePrincipalUri"
 
+Invoke-RestMethod -Uri $addKustoServicePrincipalUri -Method POST -Body $body -Headers @{ Authorization="Bearer $token" } -ContentType "application/json"
 
 Write-Information "Create linked service for Kusto database $($kustoDatabaseName)"
 

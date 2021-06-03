@@ -101,6 +101,8 @@ Write-Host "Body: $body"
 $addKustoServicePrincipalUri = "https://$kustoClusterName.$($location).kusto.windows.net/v1/rest/mgmt"
 Write-Host "URI: $addKustoServicePrincipalUri"
 
+curl $addKustoServicePrincipalUri -d"$body" -H "Content-Type: application/json" -H "Authorization: Bearer $token"
+
 Invoke-RestMethod -Uri $addKustoServicePrincipalUri -Method POST -Body $body -Headers @{ Authorization="Bearer $token" } -ContentType "application/json"
 
 Write-Information "Create linked service for Kusto database $($kustoDatabaseName)"

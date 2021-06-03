@@ -86,22 +86,23 @@ $kustoDatabaseName = "ASA-Data-Explorer-DB-01"
 $kustoStatement = ".create table SalesTelemetry ( CustomerId:int32, ProductId:int32, Timestamp:datetime, Url:string)"
 
 $token = ((az account get-access-token --resource https://help.kusto.windows.net) | ConvertFrom-Json).accessToken
-$body = "{ db: ""$kustoDatabaseName"", csl: ""$kustoStatement"" }"
+
+$createTableRequestObject = @{
+        db = $kustoDatabaseName;
+        csl = $kustoStatement;
+}
+
+$body = $createTableRequestObject | ConvertTo-Json
 Invoke-RestMethod -Uri https://$kustoClusterName.$($location).kusto.windows.net/v1/rest/mgmt -Method POST -Body $body -Headers @{ Authorization="Bearer $token" } -ContentType "application/json"
 
 # Set the Azure Synapse Analytics GA Labs service principal as admin on the Kusto database
 
 Write-Information "Making the service principal 'Azure Synapse Analytics GA Labs $($uniqueId)' an admin on the Kusto database"
-Write-Host "Service Principal Name: 'Azure Synapse Analytics GA Labs $($uniqueId)'"
-$app = ((az ad sp list --display-name "Azure Synapse Analytics GA Labs $($uniqueId)") | ConvertFrom-Json)[0]
-$kustoStatement = ".add database ['$($kustoDatabaseName)'] admins ('aadapp=$($app.appId)')"
-Write-Host "Kusto Statement: $kustoStatement"
-$body = "{ ""db"": ""$kustoDatabaseName"", ""csl"": ""$kustoStatement"" }"
-Write-Host "Body: $body"
-$addKustoServicePrincipalUri = "https://$kustoClusterName.$($location).kusto.windows.net/v1/rest/mgmt"
-Write-Host "URI: $addKustoServicePrincipalUri"
 
-curl $addKustoServicePrincipalUri -d"$body" -H "Content-Type: application/json" -H "Authorization: Bearer $token"
+$app = ((az ad sp list --display-name "Azure Synapse Analytics GA Labs $($uniqueId)") | ConvertFrom-Json)[0]
+$kustoStatement = ".add database ['$($kustoDatabaseName)'] admins ('aadapp=$($app.objectId)')"
+$body = "{ ""db"": ""$kustoDatabaseName"", ""csl"": ""$kustoStatement"" }"
+$addKustoServicePrincipalUri = "https://$kustoClusterName.$($location).kusto.windows.net/v1/rest/mgmt"
 
 Invoke-RestMethod -Uri $addKustoServicePrincipalUri -Method POST -Body $body -Headers @{ Authorization="Bearer $token" } -ContentType "application/json"
 

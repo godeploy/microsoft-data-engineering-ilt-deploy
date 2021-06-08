@@ -105,7 +105,13 @@ $kustoStatement = ".add database ['$($kustoDatabaseName)'] admins ('aadapp=$($ap
 $body = "{ ""db"": ""$kustoDatabaseName"", ""csl"": ""$kustoStatement"" }"
 $addKustoServicePrincipalUri = "https://$kustoClusterName.$($location).kusto.windows.net/v1/rest/mgmt"
 
-Invoke-RestMethod -Uri $addKustoServicePrincipalUri -Method POST -Body $body -Headers @{ Authorization="Bearer $token" } -ContentType "application/json"
+try {
+        Invoke-RestMethod -Uri $addKustoServicePrincipalUri -Method POST -Body $body -Headers @{ Authorization="Bearer $token" } -ContentType "application/json"
+} catch {
+        Write-Host $_.ErrorDetails.Message
+        Start-Sleep -Seconds 600
+        throw
+}
 
 Write-Information "Create linked service for Kusto database $($kustoDatabaseName)"
 

@@ -105,12 +105,25 @@ $kustoStatement = ".add database ['$($kustoDatabaseName)'] admins ('aadapp=$($ap
 $body = "{ ""db"": ""$kustoDatabaseName"", ""csl"": ""$kustoStatement"" }"
 $addKustoServicePrincipalUri = "https://$kustoClusterName.$($location).kusto.windows.net/v1/rest/mgmt"
 
-try {
-        Invoke-RestMethod -Uri $addKustoServicePrincipalUri -Method POST -Body $body -Headers @{ Authorization="Bearer $token" } -ContentType "application/json"
-} catch {
-        Write-Host $_.ErrorDetails.Message
-        Start-Sleep -Seconds 600
-        throw
+$tryFor = 20
+$waitFor = 30
+while ($true) {
+        try {
+                Write-Host "Attempting to add service principal as Kusto database admin..."
+                Invoke-RestMethod -Uri $addKustoServicePrincipalUri -Method POST -Body $body -Headers @{ Authorization="Bearer $token" } -ContentType "application/json"
+                Write-Host "Succeeded, continuing."
+                break;
+        } catch {
+                Write-Host "Failed to add service principal as admin for Kusto database."
+                $tryFor--
+                if ($tryFor -gt 0) {
+                        Write-Host "Reattempt in $waitFor seconds..."
+                        Start-Sleep -Seconds $waitFor
+                        continue;
+                }
+                Write-Host "Giving up."
+                throw
+        }
 }
 
 Write-Information "Create linked service for Kusto database $($kustoDatabaseName)"

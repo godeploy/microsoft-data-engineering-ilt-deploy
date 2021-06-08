@@ -428,4 +428,5 @@ Write-Information "Preparing environment for labs"
 $app = (az ad sp create-for-rbac -n "Azure Synapse Analytics GA Labs $($uniqueId)" --skip-assignment) | ConvertFrom-Json
 
 $secretValue = ConvertTo-SecureString $app.password -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVaultName -Name "ASA-GA-LABS-SP-ID" -SecretValue $app.appId
 Set-AzKeyVaultSecret -VaultName $keyVaultName -Name "ASA-GA-LABS" -SecretValue $secretValue

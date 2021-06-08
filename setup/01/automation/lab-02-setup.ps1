@@ -99,11 +99,9 @@ Invoke-RestMethod -Uri https://$kustoClusterName.$($location).kusto.windows.net/
 
 Write-Information "Making the service principal 'Azure Synapse Analytics GA Labs $($uniqueId)' an admin on the Kusto database"
 
-$armAccessToken = Get-AzAccessToken
-$synapseWorkspace = Invoke-RestMethod -Uri "https://management.azure.com/subscriptions/$($subscriptionId)/resourceGroups/$($resourceGroupName)/providers/Microsoft.Synapse/workspaces/$($workspaceName)?api-version=2021-03-01" -Headers @{Authorization = "Bearer $($armAccessToken.Token)"}
-$workspaceServicePrincipal = Get-AzADServicePrincipal -ObjectId $synapseWorkspace.identity.principalId
+$appId = Get-AzKeyVaultSecret -VaultName $keyVaultName -SecretName ASA-GA-LABS-SP-ID -AsPlainText
 
-$kustoStatement = ".add database ['$($kustoDatabaseName)'] admins ('aadapp=$($workspaceServicePrincipal.ApplicationId)')"
+$kustoStatement = ".add database ['$($kustoDatabaseName)'] admins ('aadapp=$($appId)')"
 $body = "{ ""db"": ""$kustoDatabaseName"", ""csl"": ""$kustoStatement"" }"
 $addKustoServicePrincipalUri = "https://$kustoClusterName.$($location).kusto.windows.net/v1/rest/mgmt"
 
@@ -113,7 +111,7 @@ Write-Information "Create linked service for Kusto database $($kustoDatabaseName
 
 $linkedServiceName = $kustoClusterName.ToLower()
 $result = Create-DataExplorerKeyVaultLinkedService -TemplatesPath $templatesPath -WorkspaceName $workspaceName -Name $linkedServiceName -DataExplorerClusterName "$($kustoClusterName).$($location)" `
-                 -DataExplorerDatabaseName $kustoDatabaseName -AADTenantId $tenantId -AADServicePrincipalId $workspaceServicePrincipal.ApplicationId -KeyVaultLinkedServiceName $keyVaultName -SecretName "ASA-GA-LABS"
+                 -DataExplorerDatabaseName $kustoDatabaseName -AADTenantId $tenantId -AADServicePrincipalId $appId -KeyVaultLinkedServiceName $keyVaultName -SecretName "ASA-GA-LABS"
 Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
 
 

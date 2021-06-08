@@ -100,8 +100,9 @@ Invoke-RestMethod -Uri https://$kustoClusterName.$($location).kusto.windows.net/
 Write-Information "Making the service principal 'Azure Synapse Analytics GA Labs $($uniqueId)' an admin on the Kusto database"
 
 $appId = Get-AzKeyVaultSecret -VaultName $keyVaultName -SecretName ASA-GA-LABS-SP-ID -AsPlainText
+$tenant = Get-AzTenant
 
-$kustoStatement = ".add database ['$($kustoDatabaseName)'] admins ('aadapp=$($appId)')"
+$kustoStatement = ".add database ['$($kustoDatabaseName)'] admins ('aadapp=$($appId);$($tenant.ExtendedProperties.Directory)')"
 $body = "{ ""db"": ""$kustoDatabaseName"", ""csl"": ""$kustoStatement"" }"
 $addKustoServicePrincipalUri = "https://$kustoClusterName.$($location).kusto.windows.net/v1/rest/mgmt"
 
@@ -109,19 +110,21 @@ $tryFor = 20
 $waitFor = 30
 while ($true) {
         try {
-                Write-Host "Attempting to add service principal as Kusto database admin..."
+                Write-Host "Attempting to add service principal '$($appId);$($tenant.ExtendedProperties.Directory)' as Kusto database admin..."
                 Invoke-RestMethod -Uri $addKustoServicePrincipalUri -Method POST -Body $body -Headers @{ Authorization="Bearer $token" } -ContentType "application/json"
                 Write-Host "Succeeded, continuing."
                 break;
         } catch {
-                Write-Host "Failed to add service principal as admin for Kusto database."
+                Write-Host "Failed to add service principal as admin for Kusto database: $($_.ErrorDetails.Message)"
                 $tryFor--
                 if ($tryFor -gt 0) {
+                        $Error.clear()
                         Write-Host "Reattempt in $waitFor seconds..."
                         Start-Sleep -Seconds $waitFor
                         continue;
                 }
                 Write-Host "Giving up."
+                Write-Error $_.ErrorDetails.Message
                 throw
         }
 }

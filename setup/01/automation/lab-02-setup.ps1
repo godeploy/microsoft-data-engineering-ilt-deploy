@@ -111,6 +111,8 @@ $waitFor = 30
 while ($true) {
         try {
                 Write-Host "Attempting to add service principal '$($appId);$($tenant.ExtendedProperties.Directory)' as Kusto database admin..."
+                Write-Host "Kusto URI: $addKustoServicePrincipalUri"
+                Write-Host "Body: $body"
                 Invoke-RestMethod -Uri $addKustoServicePrincipalUri -Method POST -Body $body -Headers @{ Authorization="Bearer $token" } -ContentType "application/json"
                 Write-Host "Succeeded, continuing."
                 break;

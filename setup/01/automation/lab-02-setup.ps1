@@ -111,6 +111,14 @@ $waitFor = 30
 while ($true) {
         try {
                 Write-Host "Attempting to add service principal '$($appId);$($tenant.ExtendedProperties.Directory)' as Kusto database admin..."
+                Write-Host "Checking for Service Principal presence..."
+                $azureSynapseWorkspaceServicePrincipal = Get-AzADServicePrincipal -ApplicationId $appId
+                if ($null -eq $azureSynapseWorkspaceServicePrincipal) {
+                        Write-Error "Service Principal not present!"
+                        continue;
+                } else {
+                        Write-Host "Found Service Principal: '$($azureSynapseWorkspaceServicePrincipal.DisplayName)'"
+                }
                 Write-Host "Kusto URI: $addKustoServicePrincipalUri"
                 Write-Host "Body: $body"
                 Invoke-RestMethod -Uri $addKustoServicePrincipalUri -Method POST -Body $body -Headers @{ Authorization="Bearer $token" } -ContentType "application/json"

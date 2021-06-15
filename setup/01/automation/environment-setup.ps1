@@ -148,6 +148,17 @@ Set-AzKeyVaultAccessPolicy -ResourceGroupName $resourceGroupName -VaultName $key
 #$global:sqlPassword = $(Get-AzKeyVaultSecret -VaultName $keyVaultName -Name $keyVaultSQLUserSecretName).SecretValueText
 $global:sqlPassword = $(Get-AzKeyVaultSecret -VaultName $keyVaultName -Name $keyVaultSQLUserSecretName -AsPlainText)
 
+# Is it a timing issue?
+### Create SP
+Write-Information "Azure Synapse Analytics GA Labs $($uniqueId)"
+
+$app = (az ad sp create-for-rbac -n "Azure Synapse Analytics GA Labs $($uniqueId)" --skip-assignment) | ConvertFrom-Json
+
+$secretIdValue = ConvertTo-SecureString $app.appId -AsPlainText -Force
+$secretValue = ConvertTo-SecureString $app.password -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVaultName -Name "ASA-GA-LABS-SP-ID" -SecretValue $secretIdValue
+Set-AzKeyVaultSecret -VaultName $keyVaultName -Name "ASA-GA-LABS" -SecretValue $secretValue
+### End create SP
 
 #Write-Information "Create SQL-USER-ASA Key Vault Secret"
 #$secretValue = ConvertTo-SecureString $sqlPassword -AsPlainText -Force
@@ -421,13 +432,3 @@ foreach ($dataset in $loadingDatasets.Keys) {
         Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
 }
 
-
-
-Write-Information "Preparing environment for labs"
-
-$app = (az ad sp create-for-rbac -n "Azure Synapse Analytics GA Labs $($uniqueId)" --skip-assignment) | ConvertFrom-Json
-
-$secretIdValue = ConvertTo-SecureString $app.appId -AsPlainText -Force
-$secretValue = ConvertTo-SecureString $app.password -AsPlainText -Force
-Set-AzKeyVaultSecret -VaultName $keyVaultName -Name "ASA-GA-LABS-SP-ID" -SecretValue $secretIdValue
-Set-AzKeyVaultSecret -VaultName $keyVaultName -Name "ASA-GA-LABS" -SecretValue $secretValue
